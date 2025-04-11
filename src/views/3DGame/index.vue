@@ -1,9 +1,10 @@
 <script setup>
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 const container = ref(null)
 let scene, camera, renderer, cube, controls, heart, axesHelper, rotundity
+const cameraZValue = ref(20) // 用于控制 camera 的 z 值
 const init = () => {
   // 创建场景
   scene = new THREE.Scene()
@@ -11,7 +12,7 @@ const init = () => {
 
   // 创建相机
   camera = new THREE.PerspectiveCamera(75, 500 / 500, 0.1, 1000)
-  camera.position.z = 20
+  camera.position.z = cameraZValue.value
 
   // 创建渲染器
   renderer = new THREE.WebGLRenderer()
@@ -19,9 +20,9 @@ const init = () => {
   container.value.appendChild(renderer.domElement)
 
   // 添加轨道控制器（orbitcontrols）
-  controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableDamping = true
-  controls.dampingFactor = 0.25
+  // controls = new OrbitControls(camera, renderer.domElement)
+  // controls.enableDamping = true
+  // controls.dampingFactor = 0.25
 
   // 创建立方体
   const geometry1 = new THREE.BoxGeometry(2, 1, 1)
@@ -88,6 +89,16 @@ const init = () => {
   // 开始动画
   anmate()
 }
+
+// 进度条改变时更新 camera 的 z 值
+const updateCameraZ = (value) => {
+  cameraZValue.value = value
+  camera.position.z = value
+}
+
+watch(cameraZValue, (value) => {
+  camera.position.z = value
+})
 
 // 添加球体
 const addBall = () => {
@@ -179,6 +190,13 @@ onUnmounted(() => {
       HaveAxesHelper ? '清除参考系' : '添加参考系'
     }}</el-button>
     <el-button type="primary" @click="addBall">添加球体</el-button>
+    <el-slider
+      v-model="cameraZValue"
+      :min="5"
+      :max="50"
+      @change="updateCameraZ"
+      label="Camera Z值"
+    />
   </div>
   <div ref="container" class="three_container"></div>
 </template>

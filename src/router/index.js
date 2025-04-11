@@ -24,6 +24,11 @@ const router = createRouter({
       name: 'shout',
       component: () => import('../views/shout/index.vue'),
     },
+    {
+      path: '/3DRouble',
+      name: '3DRouble',
+      component: () => import('../views/3DGame/index.vue'),
+    },
   ],
 })
 

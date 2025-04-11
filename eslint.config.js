@@ -12,7 +12,12 @@ export default [
     name: 'app/files-to-ignore',
     ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**'],
   },
-
+  {
+    extends: ['plugin:vue/vue3-recommended'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
   js.configs.recommended,
   ...pluginVue.configs['flat/essential'],
   skipFormatting,

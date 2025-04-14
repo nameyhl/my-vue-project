@@ -29,6 +29,11 @@ const router = createRouter({
       name: '3DRouble',
       component: () => import('../views/3DGame/index.vue'),
     },
+    {
+      path: '/cesium',
+      name: 'cesium',
+      component: () => import('../views/cesium/index.vue'),
+    },
   ],
 })
 

@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import greedSnake from '@/assets/gameLogo/greedySnake.png'
 import logo2048 from '@/assets/gameLogo/2048.png'
 import shoutLogo from '@/assets/gameLogo/shout.png'
+import cesiumLogo from '@/assets/gameLogo/cesium.png'
 
 const gameList = ref([
   {
@@ -20,6 +21,11 @@ const gameList = ref([
     name: '射击小游戏',
     logo: shoutLogo,
     url: '/shout',
+  },
+  {
+    name: '地图',
+    logo: cesiumLogo,
+    url: '/cesium',
   },
 ])
 </script>

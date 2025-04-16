@@ -5,6 +5,7 @@ import greedSnake from '@/assets/gameLogo/greedySnake.png'
 import logo2048 from '@/assets/gameLogo/2048.png'
 import shoutLogo from '@/assets/gameLogo/shout.png'
 import cesiumLogo from '@/assets/gameLogo/cesium.png'
+import ThreeJS from '@/assets/gameLogo/ThreeJS.png'
 
 const gameList = ref([
   {
@@ -26,6 +27,11 @@ const gameList = ref([
     name: '地图',
     logo: cesiumLogo,
     url: '/cesium',
+  },
+  {
+    name: '3D',
+    logo: ThreeJS,
+    url: '/3DRouble',
   },
 ])
 </script>

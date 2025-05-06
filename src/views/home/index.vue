@@ -24,9 +24,14 @@ const gameList = ref([
     url: '/shout',
   },
   {
-    name: '地图',
+    name: '天地图',
     logo: cesiumLogo,
     url: '/cesium',
+  },
+  {
+    name: '腾讯地图',
+    logo: cesiumLogo,
+    url: '/moveHouse',
   },
   {
     name: '3D',

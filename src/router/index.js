@@ -34,6 +34,11 @@ const router = createRouter({
       name: 'cesium',
       component: () => import('../views/cesium/index.vue'),
     },
+    {
+      path: '/moveHouse',
+      name: 'moveHouse',
+      component: () => import('@/views/moveHouse/index.vue'),
+    },
   ],
 })
 

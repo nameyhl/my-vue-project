@@ -12,14 +12,6 @@ import 'cesium/Build/Cesium/Widgets/widgets.css'
 
 let viewer = null
 
-let x = ref(-2382566)
-let y = ref(9493329)
-let z = ref(3200000)
-
-const clickSmall = () => {
-  z.value -= 10000
-  console.log(z.value)
-}
 // 设置 Cesium 资源路径
 Cesium.buildModuleUrl.setBaseUrl('/node_modules/cesium/Build/Cesium/')
 onMounted(() => {
@@ -44,51 +36,66 @@ onMounted(() => {
     showRenderLoopErrors: false,
     shadows: false,
   })
+  // 取消注释以显示地球
   viewer.scene.globe.show = false
   // 关闭大气效果
   viewer.scene.skyAtmosphere.show = false
   // 关闭星空背景
-  viewer.scene.skyBox.show = false
-
-  // 修改相机交互行为，左键为移动，右键为俯仰角
-  // 确保相机控制器启用
-  viewer.scene.screenSpaceCameraController.enableInputs = true
-
-  // 设置右键拖动俯仰操作
-  viewer.scene.screenSpaceCameraController.tiltEventTypes = [Cesium.CameraEventType.RIGHT_DRAG]
+  viewer.scene.backgroundColor = new Cesium.Color(0.1, 0.2, 0.3, 1.0)
 
   // 设置放大缩小的最大最小值
-  // viewer.scene.screenSpaceCameraController.minimumZoomDistance = 100 // 最小缩放距离
-  // viewer.scene.screenSpaceCameraController.maximumZoomDistance = 5000000 // 最大缩放距离
+  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 100 // 最小缩放距离
+  viewer.scene.screenSpaceCameraController.maximumZoomDistance = 5000000 // 最大缩放距离
 
-  let x = 120,
-    y = 150,
-    z = 144000
-  // 把xyz转化为经纬度高度
-  // 笛卡尔坐标为x,y,z把他转为经纬度
-  let cartesian = new Cesium.Cartesian3(x, y, z)
-  let cartographic = Cesium.Cartographic.fromCartesian(cartesian)
+  /// 修改相机控制
+  // ScreenSpaceCameraController.js #160 #192
+  let cameraControl = viewer.scene.screenSpaceCameraController
+
+  //相机允许在地底移动
+  cameraControl.enableCollisionDetection = false
+  // Cesium.CameraEventType.RIGHT_DRAG -> Cesium.CameraEventType.MIDDLE_DRAG
+  cameraControl.zoomEventTypes = cameraControl.zoomEventTypes.map((k) => {
+    return Cesium.CameraEventType.RIGHT_DRAG === k ? Cesium.CameraEventType.MIDDLE_DRAG : k
+  })
+  // Cesium.CameraEventType.MIDDLE_DRAG -> Cesium.CameraEventType.RIGHT_DRAG
+  cameraControl.tiltEventTypes = cameraControl.tiltEventTypes.map((k) => {
+    return Cesium.CameraEventType.MIDDLE_DRAG === k ? Cesium.CameraEventType.RIGHT_DRAG : k
+  })
+
+  // 报错 "oneOverRadii is required" 通常是因为在调用 Cesium.Cartographic.fromCartesian 时，缺少必要的椭球体参数。
+  // 可以通过传递 Cesium.Ellipsoid.WGS84 来解决这个问题。
+
+  console.log(Cesium.Cartesian3.fromDegrees(114.0707, 22.5431, 10))
+
+  let x = -2403826.4959479137,
+    y = 5381202.542238743,
+    z = 2430069.5996584026
+  // 把 xyz 转换为经纬度高度，明确指定椭球体为 WGS84
+  let cartographic = Cesium.Cartographic.fromCartesian(
+    new Cesium.Cartesian3(x, y, z),
+    Cesium.Ellipsoid.WGS84,
+    new Cesium.Cartographic(),
+  )
   let longitude = Cesium.Math.toDegrees(cartographic.longitude)
   let latitude = Cesium.Math.toDegrees(cartographic.latitude)
   let height = cartographic.height
 
   let boxPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
-  let cameraPosition = new Cesium.Cartesian3(longitude, latitude, height + 100)
+  // 修正相机位置
+  let cameraPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height + 10000 + 10)
 
   // 设置相机位置
   viewer.camera.setView({
     destination: cameraPosition,
     orientation: {
       heading: Cesium.Math.toRadians(0), // 偏航角，水平旋转角度
-      // pitch: Cesium.Math.toRadians(-30), // 俯仰角，垂直倾斜角度
+      pitch: Cesium.Math.toRadians(-30), // 俯仰角，垂直倾斜角度
       roll: Cesium.Math.toRadians(0), // 翻滚角
     },
   })
 
-  // 把鼠标左键拖动事件改为笛卡尔坐标系水平平移
-
   let box = new Cesium.BoxGraphics({
-    dimensions: new Cesium.Cartesian3(1000000, 1000000, 1000000),
+    dimensions: new Cesium.Cartesian3(10000, 10000, 10000),
     material: Cesium.Color.RED.withAlpha(0.5),
     outline: true,
     outlineColor: Cesium.Color.BLACK,

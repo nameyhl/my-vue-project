@@ -39,6 +39,11 @@ const router = createRouter({
       name: 'moveHouse',
       component: () => import('@/views/moveHouse/index.vue'),
     },
+    {
+      path: '/markDown',
+      name: 'markDown',
+      component: () => import('@/views/markDown/index.vue'),
+    },
   ],
 })
 

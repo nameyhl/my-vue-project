@@ -11,8 +11,12 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "cesium": "1.128",
+    "@dvgis/dc-sdk": "^4.2.0",
+    "@dvgis/vite-plugin-dc": "^4.0.1",
+    "cesium": "^1.129.0",
     "element-plus": "^2.9.7",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.11",
     "pinia": "^2.3.1",
     "three": "^0.175.0",
     "three-orbitcontrols": "^2.110.2",

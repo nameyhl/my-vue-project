@@ -44,6 +44,11 @@ const router = createRouter({
       name: 'markDown',
       component: () => import('@/views/markDown/index.vue'),
     },
+    {
+      path: '/coorSys',
+      name: 'coorSys',
+      component: () => import('@/views/coorSys/index.vue'),
+    },
   ],
 })
 

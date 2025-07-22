@@ -36,7 +36,7 @@ const gameList = ref([
   {
     name: '3D',
     logo: ThreeJS,
-    url: '/3DRouble',
+    url: '/create3D',
   },
 ])
 </script>

@@ -20,6 +20,7 @@
     "pinia": "^2.3.1",
     "three": "^0.175.0",
     "three-orbitcontrols": "^2.110.2",
+    "three.js": "^0.77.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },

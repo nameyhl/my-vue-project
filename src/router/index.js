@@ -35,6 +35,11 @@ const router = createRouter({
       component: () => import('../views/cesium/index.vue'),
     },
     {
+      path: '/newCesium',
+      name: 'newCesium',
+      component: () => import('../views/3Dcesium/index.vue'),
+    },
+    {
       path: '/moveHouse',
       name: 'moveHouse',
       component: () => import('@/views/moveHouse/index.vue'),
@@ -48,6 +53,16 @@ const router = createRouter({
       path: '/coorSys',
       name: 'coorSys',
       component: () => import('@/views/coorSys/index.vue'),
+    },
+    {
+      path: '/create3D',
+      name: 'create3D',
+      component: () => import('@/views/create3D/index.vue'),
+    },
+    {
+      path: '/cesiumWithThreeJs',
+      name: 'cesiumWithThreeJs',
+      component: () => import('@/views/cesiumWithThreeJs/index.vue'),
     },
   ],
 })

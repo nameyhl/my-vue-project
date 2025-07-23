@@ -8,88 +8,123 @@ Cesium.buildModuleUrl.setBaseUrl('/node_modules/cesium/Build/Cesium/')
 let viewer = null
 
 import data from '@/data.js'
+import init, * as wasm from '/public/pkg/js_tools.js'
+
+// 将data数据变成经纬度
+const toLonLat = async (point) => {
+  await init()
+  let lonLat = wasm.xy_2_lonlat_utm(point[0], point[1], 48)
+  return new Promise((resolve) => {
+    resolve(lonLat)
+  })
+}
+
+const toLonLatMany = async (points) => {
+  await init()
+  let lonLats = wasm.xy_2_lonlat_utm_many(points, 48)
+  return new Promise((resolve) => {
+    resolve(lonLats)
+  })
+}
+
+// 将圆弧段转换为多个点
+const convertArcToPoints = (line) => {
+  let arcPoints = []
+  let pointNum = 20
+
+  let center = {
+    x: line.center[0],
+    y: line.center[1],
+  }
+  let radius = line.radius
+  let start = {
+    x: line.startPoint[0],
+    y: line.startPoint[1],
+  }
+  let end = {
+    x: line.endPoint[0],
+    y: line.endPoint[1],
+  }
+
+  // 获取圆弧的起点和终点角度
+  let startAngle = Math.atan2(start.y - center.y, start.x - center.x)
+  let endAngle = Math.atan2(end.y - center.y, end.x - center.x)
+
+  // 确保角度方向正确
+  let angleDiff = endAngle - startAngle
+  if (line.clockwise) {
+    if (angleDiff > 0) angleDiff -= 2 * Math.PI
+  } else {
+    if (angleDiff < 0) angleDiff += 2 * Math.PI
+  }
+
+  // 生成圆弧上的点
+  for (let i = 0; i <= pointNum; i++) {
+    const f = i / pointNum
+    const angle = startAngle + angleDiff * f
+    const x = center.x + radius * Math.cos(angle)
+    const y = center.y + radius * Math.sin(angle)
+    arcPoints.push([x, y])
+  }
+  return arcPoints
+}
 
 // 转换轨迹数据为Cartesian3数组
-function convertTrajectory(lines) {
-  const positions = []
-  for (const segment of lines) {
-    if (segment.type === 1) {
-      // 直线段
-      positions.push(
-        new Cesium.Cartesian3(
-          5000, // x坐标设为0，因为是y-z平面运动
-          segment.startPoint[0],
-          segment.startPoint[1],
-        ),
-      )
-      positions.push(new Cesium.Cartesian3(5000, segment.endPoint[0], segment.endPoint[1]))
-    } else if (segment.type === 2) {
-      // 圆弧段
-      const arcPoints = generateArcPoints(segment)
-      positions.push(...arcPoints)
+async function convertTrajectory(lines) {
+  let points = []
+  // 获取轨迹上的点
+  lines.forEach((line) => {
+    if (line.type === 1) {
+      points.push([line.startPoint[0], line.startPoint[1]])
+      points.push([line.endPoint[0], line.endPoint[1]])
+    } else if (line.type === 2) {
+      points = points.concat(convertArcToPoints(line))
     }
+  })
+
+  // 将所有points转换为经纬度
+  let lonLats = await toLonLatMany(points)
+  let positions = []
+
+  for (let i = 0; i < lonLats.length; i += 2) {
+    positions.push(Cesium.Cartesian3.fromDegrees(lonLats[i], lonLats[i + 1]))
   }
 
   return positions
 }
 
-// 生成圆弧点
-function generateArcPoints(arcSegment) {
-  const points = []
-  const [cx, cy] = arcSegment.center
-  const radius = arcSegment.radius
-  const startAngle = Math.atan2(arcSegment.startPoint[1] - cy, arcSegment.startPoint[0] - cx)
-  const endAngle = Math.atan2(arcSegment.endPoint[1] - cy, arcSegment.endPoint[0] - cx)
-
-  let angleDiff = endAngle - startAngle
-  if (!arcSegment.clockwise && angleDiff < 0) {
-    angleDiff += 2 * Math.PI
-  } else if (arcSegment.clockwise && angleDiff > 0) {
-    angleDiff -= 2 * Math.PI
-  }
-
-  const steps = 20 // 圆弧分段数
-  for (let i = 0; i <= steps; i++) {
-    const angle = startAngle + (angleDiff * i) / steps
-    const y = cx + radius * Math.cos(angle)
-    const z = cy + radius * Math.sin(angle)
-    points.push(new Cesium.Cartesian3(5000, y, z))
-  }
-
-  return points
-}
-const createElement = () => {
-  // 定义折线路径
-  const positions = convertTrajectory(data.lines)
+const createElement = async () => {
+  let completePath = []
+  await convertTrajectory(data.lines).then((res) => {
+    completePath = res
+  })
 
   // 定义截面形状(相对于路径的局部坐标系)
 
-  const shape = data.section.map((p) => new Cesium.Cartesian2(p[1], p[0]))
+  // const shape = data.section.map((p) => new Cesium.Cartesian2(p[1], p[0]))
 
-  // 创建几何体
-  const geometry = new Cesium.PolylineVolumeGeometry({
-    polylinePositions: positions,
-    shapePositions: shape,
-    vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
-    granularity: 0.01,
-  })
+  const shape = [
+    new Cesium.Cartesian2(0, 0),
+    new Cesium.Cartesian2(10, 0),
+    new Cesium.Cartesian2(10, 10),
+    new Cesium.Cartesian2(0, 10),
+    new Cesium.Cartesian2(0, 0),
+  ]
 
-  // 创建几何体实例
-  const instance = new Cesium.GeometryInstance({
-    geometry: geometry,
-    attributes: {
-      color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE.withAlpha(1.0)), // alpha改为1.0
+  // 创建实体
+  const entity = viewer.entities.add({
+    name: '带圆弧的轨迹体积模型',
+    polylineVolume: {
+      positions: completePath,
+      shape: shape,
+      material: new Cesium.ColorMaterialProperty(Cesium.Color.BLUE.withAlpha(0.7)),
+      outline: true,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      cornerType: Cesium.CornerType.ROUNDED,
     },
   })
-  viewer.scene.primitives.add(
-    new Cesium.Primitive({
-      geometryInstances: instance,
-      appearance: new Cesium.PerInstanceColorAppearance({
-        translucent: false,
-        closed: true,
-      }),
-    }),
-  )
+  return entity
 }
 
 onMounted(() => {
@@ -127,7 +162,7 @@ onMounted(() => {
   ]
 
   // 隐藏地球
-  viewer.scene.globe.show = false
+  // viewer.scene.globe.show = false
   viewer.scene.screenSpaceCameraController.tiltEventTypes = [
     Cesium.CameraEventType.MIDDLE_DRAG,
     Cesium.CameraEventType.PINCH,
@@ -161,39 +196,7 @@ onMounted(() => {
   })
 
   const element = createElement()
-
-  // 计算元素的中心位置
-  const positions = convertTrajectory(data.lines)
-  let sumX = 0
-  let sumY = 0
-  let sumZ = 0
-  for (const pos of positions) {
-    sumX += pos.x
-    sumY += pos.y
-    sumZ += pos.z
-  }
-  const centerX = sumX / positions.length
-  const centerY = sumY / positions.length
-  const centerZ = sumZ / positions.length
-
-  // 创建中心位置的 Cartesian3 对象
-  const centerPosition = new Cesium.Cartesian3(centerX, centerY, centerZ)
-
-  // 计算中心上方100m的位置（假设x轴为上方）
-  const targetPosition = Cesium.Cartesian3.add(
-    centerPosition,
-    new Cesium.Cartesian3(100, 0, 0),
-    new Cesium.Cartesian3(),
-  )
-  // 将相机定位到目标位置
-  viewer.camera.setView({
-    destination: targetPosition,
-    orientation: {
-      heading: Cesium.Math.toRadians(0), // 偏航角
-      pitch: Cesium.Math.toRadians(-90), // 俯仰角，向下看
-      roll: Cesium.Math.toRadians(0), // 翻滚角
-    },
-  })
+  viewer.zoomTo(element)
 })
 </script>
 <template>

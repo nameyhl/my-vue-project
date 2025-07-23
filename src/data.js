@@ -99,7 +99,55 @@ const section = [
   [20, -10],
 ]
 
+const hle = [
+  {
+    mileage: 0,
+    height: 2314.44,
+  },
+  {
+    mileage: 256.69,
+    height: 2311.08,
+  },
+  {
+    mileage: 388.64,
+    height: 2307.2,
+  },
+  {
+    mileage: 645.33,
+    height: 2307.51,
+  },
+  {
+    mileage: 777.28,
+    height: 2308.73,
+  },
+  {
+    mileage: 1033.97,
+    height: 2299.96,
+  },
+  {
+    mileage: 1165.92,
+    height: 2305.97,
+  },
+  {
+    mileage: 1422.61,
+    height: 2308.9,
+  },
+  {
+    mileage: 1554.56,
+    height: 2302.43,
+  },
+  {
+    mileage: 1811.25,
+    height: 2306.32,
+  },
+  {
+    mileage: 1943.19,
+    height: 2314.44,
+  },
+]
+
 export default {
   lines: lineData,
   section,
+  hle,
 }

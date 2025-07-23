@@ -133,7 +133,7 @@ const createElement = (lines, section) => {
   // 移除原有的顶点颜色设置逻辑
   // 7. 创建材质，将颜色设置为 #ccc
   const material = new THREE.MeshPhongMaterial({
-    color: 0xcccccc,
+    color: 0x0000ff,
     side: THREE.DoubleSide,
     flatShading: true,
     transparent: true,

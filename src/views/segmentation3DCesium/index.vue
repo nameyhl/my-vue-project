@@ -70,33 +70,6 @@ const convertArcToPoints = (line) => {
 }
 
 // 转换轨迹数据为Cartesian3数组
-async function convertTrajectory(lines) {
-  let points = []
-
-  points.push([lines[0].startPoint[0], lines[0].startPoint[1]])
-  // 获取轨迹上的点
-  lines.forEach((line) => {
-    if (line.type === 1) {
-      points.push([line.endPoint[0], line.endPoint[1]])
-    } else if (line.type === 2) {
-      points = points.concat(convertArcToPoints(line).slice(1))
-    }
-  })
-
-  console.log(points)
-  // 删除points的最后一个点
-
-  // 将所有points转换为经纬度
-  let lonLats = await toLonLatMany(points)
-  let positions = []
-
-  for (let i = 0; i < lonLats.length; i += 2) {
-    positions.push(Cesium.Cartesian3.fromDegrees(lonLats[i], lonLats[i + 1]))
-  }
-
-  return positions
-}
-
 async function convertTrajectory1(lines) {
   // 获取轨迹上的点
   lines.forEach(async (line) => {
@@ -122,7 +95,7 @@ const createElement1 = (positions) => {
   const entity = viewer.entities.add({
     name: '带圆弧的轨迹体积模型',
     polylineVolume: {
-      positions: completePath,
+      positions: positions,
       shape: shape,
       material: new Cesium.ColorMaterialProperty(Cesium.Color.BLUE.withAlpha(0.7)),
       outline: true,
@@ -133,31 +106,6 @@ const createElement1 = (positions) => {
     },
   })
   viewer.zoomTo(entity)
-}
-const createElement = async () => {
-  let completePath = []
-  await convertTrajectory(data.lines).then((res) => {
-    completePath = res
-  })
-
-  // 定义截面形状(相对于路径的局部坐标系)
-
-  const shape = data.section.map((p) => new Cesium.Cartesian2(-p[0], p[1]))
-
-  // 创建实体
-  const entity = viewer.entities.add({
-    name: '带圆弧的轨迹体积模型',
-    polylineVolume: {
-      positions: completePath,
-      shape: shape,
-      material: new Cesium.ColorMaterialProperty(Cesium.Color.BLUE),
-      outline: true,
-      outlineColor: Cesium.Color.WHITE,
-      outlineWidth: 2,
-      cornerType: Cesium.CornerType.ROUNDED,
-    },
-  })
-  return entity
 }
 
 onMounted(async () => {
@@ -230,8 +178,7 @@ onMounted(async () => {
 
   // const element = await convertTrajectory1(data.lines)
 
-  const element = await createElement()
-  viewer.zoomTo(element)
+  await convertTrajectory1(data.lines)
 })
 </script>
 <template>

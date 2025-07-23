@@ -35,9 +35,14 @@ const router = createRouter({
       component: () => import('../views/cesium/index.vue'),
     },
     {
-      path: '/newCesium',
+      path: '/3Dcesium',
       name: 'newCesium',
       component: () => import('../views/3Dcesium/index.vue'),
+    },
+    {
+      path: '/segmentation3DCesium',
+      name: 'segmentation3DCesium',
+      component: () => import('../views/segmentation3DCesium/index.vue'),
     },
     {
       path: '/moveHouse',

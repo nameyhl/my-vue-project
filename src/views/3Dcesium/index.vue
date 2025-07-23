@@ -10,7 +10,7 @@ let viewer = null
 import data from '@/data.js'
 import init, * as wasm from '/public/pkg/js_tools.js'
 
-// 将data数据变成经纬度
+// 将单个数据变成经纬度
 const toLonLat = async (point) => {
   await init()
   let lonLat = wasm.xy_2_lonlat_utm(point[0], point[1], 48)
@@ -18,7 +18,7 @@ const toLonLat = async (point) => {
     resolve(lonLat)
   })
 }
-
+// 批量转经纬度
 const toLonLatMany = async (points) => {
   await init()
   let lonLats = wasm.xy_2_lonlat_utm_many(points, 48)
@@ -93,6 +93,42 @@ async function convertTrajectory(lines) {
   return positions
 }
 
+async function convertTrajectory1(lines) {
+  // 获取轨迹上的点
+  lines.forEach(async (line) => {
+    let points = []
+    if (line.type === 1) {
+      points.push([line.startPoint[0], line.startPoint[1]])
+      points.push([line.endPoint[0], line.endPoint[1]])
+    } else if (line.type === 2) {
+      points = points.concat(convertArcToPoints(line))
+    }
+    // 将所有points转换为经纬度
+    let lonLats = await toLonLatMany(points)
+    let positions = []
+    for (let i = 0; i < lonLats.length; i += 2) {
+      positions.push(Cesium.Cartesian3.fromDegrees(lonLats[i], lonLats[i + 1]))
+    }
+    createElement1(positions)
+  })
+}
+
+const createElement1 = (positions) => {
+  const shape = data.section.map((p) => new Cesium.Cartesian2(-p[0], p[1]))
+  const entity = viewer.entities.add({
+    name: '带圆弧的轨迹体积模型',
+    polylineVolume: {
+      positions: positions,
+      shape: shape,
+      material: new Cesium.ColorMaterialProperty(Cesium.Color.BLUE),
+      outline: true,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      cornerType: Cesium.CornerType.ROUNDED,
+    },
+  })
+  viewer.zoomTo(entity)
+}
 const createElement = async () => {
   let completePath = []
   await convertTrajectory(data.lines).then((res) => {
@@ -127,7 +163,7 @@ const createElement = async () => {
   return entity
 }
 
-onMounted(() => {
+onMounted(async () => {
   Cesium.Ion.defaultAccessToken =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NzFiMDc5Ni05YjE2LTQ2YWYtYmJlMi1mNzRhYWM5ZGY2ZGUiLCJpZCI6MjU2NzIxLCJpYXQiOjE3MzIxNTI4OTZ9.WTGHaY16gaELJeBQbjcL7fSbd21wUWvzZkTbG9D-uqw'
 
@@ -195,8 +231,7 @@ onMounted(() => {
     return Cesium.CameraEventType.MIDDLE_DRAG === k ? Cesium.CameraEventType.RIGHT_DRAG : k
   })
 
-  const element = createElement()
-  viewer.zoomTo(element)
+  const element = await convertTrajectory1(data.lines)
 })
 </script>
 <template>
